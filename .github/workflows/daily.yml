@@ -43,8 +43,12 @@ jobs:
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
         run: |
           python fetch_cyber_news.py
-          # Prevent Jekyll processing so index.html is served directly
           touch .nojekyll
+
+      - name: Verify generated index.html
+        run: |
+          ls -la index.html
+          cat index.html | head -n 20
 
       - name: Setup Pages
         uses: actions/configure-pages@v5
