@@ -23,16 +23,19 @@ for url in FEEDS:
 
 raw_text = "\n---\n".join(articles)
 
-# 3. Initialize Gemini Client (New SDK format)
+# 3. Initialize Gemini Client
 client = genai.Client(api_key=GEMINI_KEY)
 
+# We explicitly instruct Gemini to use HTML tags <b> and <i> instead of Markdown asterisks
 prompt = f"""
 You are a cybersecurity expert. Analyze these daily news feeds:
 {raw_text}
 
-Provide:
-1. A brief 3-bullet summary for a Telegram alert.
-2. Highlight any critical CVEs or zero-day threats if present.
+Provide a brief daily brief for Telegram.
+STRICT FORMATTING RULES:
+1. Do NOT use markdown symbols like ** or * for bold/italic.
+2. Use ONLY raw HTML tags for formatting: <b>bold</b> for headings/emphasis, <i>italic</i> for extra detail.
+3. Keep it under 3 bullets. Highlight any critical CVEs or zero-day threats if present.
 """
 
 response = client.models.generate_content(
