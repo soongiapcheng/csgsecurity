@@ -12,11 +12,15 @@ GEMINI_KEY = os.environ.get("GEMINI_API_KEY", "")
 RAW_TELEGRAM_BOT_TOKEN = os.environ.get("TELEGRAM_BOT_TOKEN", "")
 RAW_TELEGRAM_CHAT_ID = os.environ.get("TELEGRAM_CHAT_ID", "")
 
-# Extract strictly the raw token pattern (numbers : alphanumeric characters)
+# Strictly extract the token pattern (e.g., 123456789:ABCdefGHIjklMNO) ignoring any extra URLs or Markdown
 token_match = re.search(r'\d+:[A-Za-z0-9_-]+', RAW_TELEGRAM_BOT_TOKEN)
-token = token_match.group(0) if token_match else RAW_TELEGRAM_BOT_TOKEN.strip()
+if token_match:
+    token = token_match.group(0)
+else:
+    # If no match, strip out any http/https/markdown prefixes manually
+    token = re.sub(r'https?://[^\s]+', '', RAW_TELEGRAM_BOT_TOKEN).strip('[]() ')
 
-# Extract strictly the chat ID (numbers, optionally starting with a minus sign for groups)
+# Extract strictly numbers for chat ID (handles negative numbers for channel/group IDs)
 chat_id_match = re.search(r'-?\d+', RAW_TELEGRAM_CHAT_ID)
 chat_id = chat_id_match.group(0) if chat_id_match else RAW_TELEGRAM_CHAT_ID.strip()
 
