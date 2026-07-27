@@ -2,17 +2,14 @@ name: Daily Cyber Briefing
 
 on:
   schedule:
-    # Runs every day at 07:00 AM UTC (3:00 PM Singapore Time)
     - cron: '0 7 * * *'
-  workflow_dispatch: # Allows manual triggers from Actions tab
+  workflow_dispatch:
 
-# Permissions required to publish directly to GitHub Pages
 permissions:
   contents: read
   pages: write
   id-token: write
 
-# Prevent concurrent deployments
 concurrency:
   group: 'pages'
   cancel-in-progress: true
@@ -39,12 +36,15 @@ jobs:
           pip uninstall -y google-generativeai google-api-python-client || true
           pip install -r requirements.txt
 
-      - name: Run Cyber Briefing Script (Generates Telegram Msg & index.html)
+      - name: Run Cyber Briefing Script
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
-        run: python fetch_cyber_news.py
+        run: |
+          python fetch_cyber_news.py
+          # Prevent Jekyll processing so index.html is served directly
+          touch .nojekyll
 
       - name: Setup Pages
         uses: actions/configure-pages@v5
@@ -52,7 +52,7 @@ jobs:
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: '.' # Uploads the repository root containing index.html
+          path: '.'
 
       - name: Deploy to GitHub Pages
         id: deployment
