@@ -24,7 +24,7 @@ raw_text = "\n---\n".join(articles)
 
 # 2. Summarize with Gemini AI
 genai.configure(api_key=GEMINI_KEY)
-model = genai.GenerativeModel('gemini-2.5-flash')
+model = genai.GenerativeModel('gemini-3.5-flash')
 
 prompt = f"""
 You are a cybersecurity expert. Analyze these daily news feeds:
