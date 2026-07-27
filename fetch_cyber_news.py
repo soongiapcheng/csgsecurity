@@ -1,4 +1,5 @@
 import os
+import datetime
 import requests
 import feedparser
 from google import genai
@@ -26,8 +27,8 @@ raw_text = "\n---\n".join(articles)
 # 3. Initialize Gemini Client
 client = genai.Client(api_key=GEMINI_KEY)
 
-# We explicitly instruct Gemini to use HTML tags <b> and <i> instead of Markdown asterisks
-prompt = f"""
+# Generate Telegram Content
+tg_prompt = f"""
 You are a cybersecurity expert. Analyze these daily news feeds:
 {raw_text}
 
@@ -38,17 +39,90 @@ STRICT FORMATTING RULES:
 3. Keep it under 3 bullets. Highlight any critical CVEs or zero-day threats if present.
 """
 
-response = client.models.generate_content(
+tg_response = client.models.generate_content(
     model='gemini-3.5-flash',
-    contents=prompt,
+    contents=tg_prompt,
 )
 
-# 4. Send Telegram Notification
-page_url = "https://<your-username>.github.io/<your-repo>/" # Replace with your URL
-telegram_msg = f"<b>🔒 Daily Cyber Briefing</b>\n\n{response.text[:3000]}\n\n🔗 <a href='{page_url}'>View Full Daily Web Report</a>"
+# Generate Full HTML Dashboard Content
+html_prompt = f"""
+You are a web developer and cybersecurity analyst. 
+Analyze these articles:
+{raw_text}
+
+Generate valid HTML body content for a modern daily cybersecurity dashboard.
+For each article/threat:
+- Wrap each item in a styled card section.
+- Provide a full summary, impact assessment, and recommended mitigation steps.
+- Include direct source links using target="_blank".
+Return ONLY raw HTML tags (e.g. <article>, <h3>, <p>, <a>). Do not include ```html code blocks.
+"""
+
+html_response = client.models.generate_content(
+    model='gemini-3.5-flash',
+    contents=html_prompt,
+)
+
+# 4. Write index.html File for GitHub Pages
+today_str = datetime.datetime.now().strftime("%B %d, %Y")
+
+full_html = f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Daily Cyber Threat Briefing - {today_str}</title>
+    <style>
+        body {{
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: #0d1117;
+            color: #c9d1d9;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            line-height: 1.6;
+        }}
+        header {{
+            border-bottom: 1px solid #30363d;
+            padding-bottom: 15px;
+            margin-bottom: 25px;
+        }}
+        h1 {{ color: #58a6ff; margin-bottom: 5px; }}
+        .date {{ color: #8b949e; font-size: 0.9em; }}
+        article {{
+            background: #161b22;
+            border: 1px solid #30363d;
+            border-radius: 6px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }}
+        h3 {{ color: #f0883e; margin-top: 0; }}
+        a {{ color: #58a6ff; text-decoration: none; }}
+        a:hover {{ text-decoration: underline; }}
+    </style>
+</head>
+<body>
+    <header>
+        <h1>🔒 Daily Cybersecurity Briefing</h1>
+        <div class="date">Updated: {today_str}</div>
+    </header>
+    <main>
+        {html_response.text}
+    </main>
+</body>
+</html>
+"""
+
+with open("index.html", "w", encoding="utf-8") as f:
+    f.write(full_html)
+
+# 5. Send Telegram Notification
+# Replace <your-username> and <your-repo> with your GitHub details
+page_url = "https://<your-username>.github.io/<your-repo>/" 
+telegram_msg = f"<b>🔒 Daily Cyber Briefing</b>\n\n{tg_response.text[:3000]}\n\n🔗 <a href='{page_url}'>View Full Daily Web Report</a>"
 
 requests.post(
-    f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage",
+    f"[https://api.telegram.org/bot](https://api.telegram.org/bot){TELEGRAM_BOT_TOKEN}/sendMessage",
     json={
         "chat_id": TELEGRAM_CHAT_ID,
         "text": telegram_msg,
@@ -57,4 +131,4 @@ requests.post(
     }
 )
 
-print("Briefing sent successfully via Telegram!")
+print("Briefing sent and index.html generated successfully!")
