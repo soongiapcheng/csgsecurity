@@ -77,7 +77,7 @@ STRICT FORMATTING RULES:
 3. Keep it under 3 bullets. Highlight any critical CVEs or zero-day threats if present.
 """
 
-tg_response = generate_with_retry('gemini-2.5-flash', tg_prompt)
+tg_response = generate_with_retry('gemini-3.5-flash', tg_prompt)
 
 # B. Generate Web Dashboard Body Content
 html_prompt = f"""
@@ -93,7 +93,7 @@ For each article/threat:
 Return ONLY raw HTML tags (e.g. <article>, <h3>, <p>, <a>). Do not include ```html code blocks.
 """
 
-html_response = generate_with_retry('gemini-2.5-flash', html_prompt)
+html_response = generate_with_retry('gemini-3.5-flash', html_prompt)
 
 # ==========================================
 # 4. GENERATE AND SAVE index.html
